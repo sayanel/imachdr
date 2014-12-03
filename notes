@@ -1,0 +1,37 @@
+Les  étapes centrales dans cette methode sont :
+1. le calcule de la courbe inverse de la reponse des photosites.
+2. le calcuke de l’image d’irradiance.
+3. le tone mapping.
+
+/***************************************************************************/
+
+1. le calcule de la courbe inverse de la reponse des photosites.
+
+Pour le calcul de la courbe inverse, il est recommande de suivre le prototype
+suivant :
+
+VectorXd responseRecovery ( 
+const std :: vector < MatrixXi > & images ,
+const std :: vector < double > & exposure ,
+const std :: vector < Vector2i > & pixels ,
+const int valueMin ,
+const int valueMax ,
+const double lambda );
+
+où les VectorXd et Vector2i ainsi que les matrices MatrixXi, sont ceux de la
+bibliothèque Eigen. La variable pixels fait référence à l’ensemble de pixels
+que vous aurez sélectioné. Cette fonction renvoie l’ensemble des valeurs de
+la fonction g.
+
+__________
+
+Ax = b
+x = (A+)b
+
+
+
+
+
+
+
+
