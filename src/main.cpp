@@ -12,7 +12,7 @@
 #include "exif.h"
 
 using namespace kn;
-/*TEST 04 */
+/*SALUT */
 
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////RESPONSE RECOVERY//////////////////////////////////////////////////
@@ -98,7 +98,7 @@ const double lambda ){
 
   std::cout << std::endl << std::endl << std::endl;
   //std::cout<<"b: " << b<<std::endl<<std::endl<<std::endl<<std::endl;
-  std::cout<<"x = [ "<<x<<std::endl<<"]"<<std::endl;
+  std::cout<<"x = [ "<< x.segment(0,255) <<std::endl<<"]"<<std::endl;
 
   return x;
 
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
   std::vector<Eigen::MatrixXi> imagesMatrixGreen(images.size());
   std::vector<Eigen::MatrixXi> imagesMatrixBlue(images.size());
 
-  for (int current_img = 0; current_img < images.size(); ++current_img){
+  for (unsigned int current_img = 0; current_img < images.size(); ++current_img){
     imagesMatrixRed[current_img] = Eigen::MatrixXi::Zero(images[current_img].height(),images[current_img].width());
     imagesMatrixGreen[current_img] = Eigen::MatrixXi::Zero(images[current_img].height(),images[current_img].width());
     imagesMatrixBlue[current_img] = Eigen::MatrixXi::Zero(images[current_img].height(),images[current_img].width());
@@ -228,8 +228,8 @@ int main(int argc, char **argv)
 
   std::cout<<"OK"<<std::endl;
 
-  std::cout<<"create A"<<std::endl;
-  responseRecovery(imagesMatrixRed, exposure, pixels, 0, 255 , 1000);
+  std::cout<<"responseRecovery"<<std::endl;
+  Eigen::VectorXd x = responseRecovery(imagesMatrixRed, exposure, pixels, 0, 255 , 1000);
   std::cout<<"OK"<<std::endl;
 
 
