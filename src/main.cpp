@@ -51,9 +51,12 @@ const double lambda ){
   //partie supérieure de b
   for(int current_image = 0; current_image < image_nb; ++current_image){
     for(int current_px = 0; current_px < sample_nb; ++current_px){
+      std::cout << "(" << current_image << "e image "<< current_px<<"e pixel) : (" << pixels[current_px](0) << ", " << pixels[current_px](1) << ")"<< std::endl;
       b(current_image * sample_nb + current_px) = getWeight(images[current_image](pixels[current_px](0), pixels[current_px](1)), 0, 255) * log(exposure[current_image]); //* calcul_poids(pixel(current_image,current_px))
     }
+
   }
+  std::cout << "OK bb" << std::endl;
   b(sample_nb * image_nb + 254) = 1;
 
   std::cout<<"C'EST GENIAL"<<std::endl;
@@ -88,7 +91,7 @@ const double lambda ){
     A(sample_nb*image_nb + i, i+2) = lambda * getWeight(i+1, 0, 255);
   }
 
-  A(sample_nb*image_nb+254, 128) = 1;
+  A(sample_nb*image_nb+254, 127) = 1;
 
 
   /*********************************/
@@ -101,9 +104,14 @@ const double lambda ){
 
   std::cout << std::endl << std::endl << std::endl;
   //std::cout<<"b: " << b<<std::endl<<std::endl<<std::endl<<std::endl;
-  std::cout<<"x = [ "<< x.segment(0,255) <<std::endl<<"]"<<std::endl;
+  std::cout<<"x = [ "<< x.segment(0,256) <<std::endl<<"]"<<std::endl;
 
-  return x;
+  /*for (int i = 0; i < 256; ++i)
+  {
+    x(i) = exp(x(i));
+  }*/
+  //std::cout<<"x = [ "<< x.segment(0,255) <<std::endl<<"]"<<std::endl;
+  return x.segment(0,256);
 
 }
 
@@ -218,14 +226,19 @@ int main(int argc, char **argv)
   std::cout<<imagesMatrixRed[0].cols()<<std::endl<<std::endl;
   std::cout<<imagesMatrixRed[0].rows()<<std::endl<<std::endl;
 
+  float width = imagesMatrixRed[0].cols();
+  float height = imagesMatrixRed[0].rows();
+
+  int taille = 10;
+
   //création du vecteur pixels--TO DO!!
   //...
   std::vector<Eigen::Vector2i> pixels;
-  for (int i = 0; i < 10; ++i)//imagesMatrixRed[0].cols()
+  for (int i = 0; i < taille; ++i)//imagesMatrixRed[0].cols()
   {
-    for (int j = 0; j < 10; ++j)//imagesMatrixRed[0].rows()
+    for (int j = 0; j < taille; ++j)//imagesMatrixRed[0].rows()
     {
-      pixels.push_back(Eigen::Vector2i(i,j));
+      pixels.push_back(Eigen::Vector2i(height * j/taille, width * i/taille));
     }
   }
 
@@ -236,6 +249,56 @@ int main(int argc, char **argv)
   std::cout<<"OK"<<std::endl;
 
 
+
+  //--------Reconstruction-------------------------------
+  //--Irradiance-----------------------------------------
+
+  Eigen::MatrixXd imageHDR_red = Eigen::MatrixXd::Zero(height, width);
+  double logEtotal = 0;
+  double totalWeight = 0;
+  double logE = 0,logEmax = 0, logEmin = 0;
+
+  std::cout<<"Irradiance"<<std::endl;
+  for(int i = 0; i < height; ++i){
+    for(int j = 0; j < width; ++j){
+      for (unsigned int current_img = 0; current_img < imagesMatrixRed.size(); ++current_img){
+        int currentZ = imagesMatrixRed[current_img](i,j);
+
+        logEtotal += getWeight(x(currentZ),0,255) * (x(currentZ) - log(exposure[current_img]));
+        totalWeight += getWeight(x(currentZ),0,255);
+      }
+      logE = (logEtotal/totalWeight);
+      if(logE > logEmax)  logEmax = logE;
+      if(logE < logEmin)  logEmin = logE;
+
+      imageHDR_red(i,j) = logE;
+    }
+  }
+
+
+
+  //--Tone-mapping---------------------------------
+  //Recherche équation linéaire
+
+  double a,b;
+  int zmin=0,zmax=255;
+
+  a = (zmax-zmin)/(logEmax - logEmin);
+  b = zmin-a*logEmin;
+
+
+  ImageRGB8u result = images[0];
+  for(uint x=0; x<images[0].width(); ++x){
+    for(uint y=0; y<images[0].height(); ++y){
+      result(x,y)[0] = a*imageHDR_red(y,x)+b; // R
+      result(x,y)[1] = a*imageHDR_red(y,x)+b; // G
+      result(x,y)[2] = a*imageHDR_red(y,x)+b; // B
+    }
+  }
+
+
+
+  std::cout<<"NICE (y)"<<std::endl;
 
 
 
@@ -248,7 +311,7 @@ int main(int argc, char **argv)
   }*/
 
   // save the final image
-  //saveJPG(images[0],"output/test465656.jpg");
+  saveJPG(result,"output/Tango-Charly.jpg");
 
   return 0;
 }
