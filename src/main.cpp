@@ -98,7 +98,7 @@ const double lambda ){
 
   std::cout << std::endl << std::endl << std::endl;
   //std::cout<<"b: " << b<<std::endl<<std::endl<<std::endl<<std::endl;
-  std::cout<<"x"<<x<<std::endl;
+  std::cout<<"x = [ "<<x<<std::endl<<"]"<<std::endl;
 
   return x;
 
