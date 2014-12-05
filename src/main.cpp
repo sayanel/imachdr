@@ -274,18 +274,14 @@ int main(int argc, char **argv)
         logEtotal += getWeight(x(currentZ),0,255) * (x(zmoinslndeltat));
         totalWeight += getWeight(x(currentZ),0,255);
       }
+
       logE = (logEtotal/totalWeight);
 
-      e = exp(logE);
-
-      if(e > emax)  emax = e;
-      if(e < emin)  emin = e;
+      if(logE > emax)  emax = logE;
+      if(logE < emin)  emin = logE;
       
-      
-
       //if(i==0 && j < 100) std ::cout << e << std::endl;
-
-      imageHDR_red(i,j) = e;
+      imageHDR_red(i,j) = logE ;
     }
   }
 
@@ -304,14 +300,15 @@ int main(int argc, char **argv)
   ImageRGB8u result = images[16];
   for(uint x=0; x<images[16].width(); ++x){
     for(uint y=0; y<images[16].height(); ++y){
-      if(x == 0 && y < 100) std::cout << imageHDR_red(y,x) << std::endl;
-      result(x,y)[0] = imageHDR_red(y,x); // R
-      result(x,y)[1] = imageHDR_red(y,x); // G
-      result(x,y)[2] = imageHDR_red(y,x); // B
+      if(x == 500 && y < 100) std::cout << a*imageHDR_red(y,x) << std::endl;
+      result(x,y)[0] = a*imageHDR_red(y,x) + b; // R
+      result(x,y)[1] = a*imageHDR_red(y,x) + b; // G
+      result(x,y)[2] = a*imageHDR_red(y,x) + b; // B
     }
   }
 
-
+  std::cout << "a= " << a << " ------ b = " << b << std::endl;
+  std::cout << "emax = " << emax << " -----  emin = " << emin << std::endl;
 
   std::cout<<"NICE (y)"<<std::endl;
 
