@@ -111,7 +111,8 @@ const double lambda ){
     x(i) = exp(x(i));
   }*/
   //std::cout<<"x = [ "<< x.segment(0,255) <<std::endl<<"]"<<std::endl;
-  return x.segment(0,256);
+  //return x.segment(0,256);
+  return x;
 
 }
 
@@ -254,10 +255,10 @@ int main(int argc, char **argv)
   //--Irradiance-----------------------------------------
 
   Eigen::MatrixXd imageHDR_red = Eigen::MatrixXd::Zero(height, width);
+
   double logEtotal = 0;
   double totalWeight = 0;
-  float e;
-  double logE = 0,emax = 0, emin = 0;
+  double logE = 0,emax = 0, emin = 255;
 
   std::cout<<"  "<<std::endl;
   for(int i = 0; i < height; ++i){
@@ -280,8 +281,9 @@ int main(int argc, char **argv)
       if(logE > emax)  emax = logE;
       if(logE < emin)  emin = logE;
       
-      //if(i==0 && j < 100) std ::cout << e << std::endl;
+      //if(i==0 && j < 100) std ::cout << logE << std::endl;
       imageHDR_red(i,j) = logE ;
+
     }
   }
 
@@ -296,21 +298,22 @@ int main(int argc, char **argv)
   a = (zmax-zmin)/(emax - emin);
   b = zmin-a*emin;
 
-
   ImageRGB8u result = images[16];
   for(uint x=0; x<images[16].width(); ++x){
     for(uint y=0; y<images[16].height(); ++y){
-      if(x == 500 && y < 100) std::cout << a*imageHDR_red(y,x) << std::endl;
-      result(x,y)[0] = a*imageHDR_red(y,x) + b; // R
-      result(x,y)[1] = a*imageHDR_red(y,x) + b; // G
-      result(x,y)[2] = a*imageHDR_red(y,x) + b; // B
+      //if(x == 500 && y < 100) std::cout << a*imageHDR_red(y,x) - b;
+      //float red = result(x,y)[0];
+      //if(x == 500 && y < 100) std::cout << " img: " << red << std::endl;
+      result(x,y)[0] = (a*imageHDR_red(y,x) - b); // R
+      result(x,y)[1] = result(x,y)[0];// G
+      result(x,y)[2] = result(x,y)[0];// B
     }
   }
 
   std::cout << "a= " << a << " ------ b = " << b << std::endl;
   std::cout << "emax = " << emax << " -----  emin = " << emin << std::endl;
 
-  std::cout<<"NICE (y)"<<std::endl;
+  std::cout<<"NICE (y) MONACO"<<std::endl;
 
 
 
