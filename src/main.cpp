@@ -256,22 +256,36 @@ int main(int argc, char **argv)
   Eigen::MatrixXd imageHDR_red = Eigen::MatrixXd::Zero(height, width);
   double logEtotal = 0;
   double totalWeight = 0;
-  double logE = 0,logEmax = 0, logEmin = 0;
+  float e;
+  double logE = 0,emax = 0, emin = 0;
 
-  std::cout<<"Irradiance"<<std::endl;
+  std::cout<<"  "<<std::endl;
   for(int i = 0; i < height; ++i){
     for(int j = 0; j < width; ++j){
       for (unsigned int current_img = 0; current_img < imagesMatrixRed.size(); ++current_img){
         int currentZ = imagesMatrixRed[current_img](i,j);
-
-        logEtotal += getWeight(x(currentZ),0,255) * (x(currentZ) - log(exposure[current_img]));
+        
+        
+        int zmoinslndeltat = currentZ - log(exposure[current_img]);
+        if(zmoinslndeltat > 255) zmoinslndeltat = 255;
+        
+        //std::cout << "currentZ - log(exposure[current_img]) = " << zmoinslndeltat << std::endl;
+        
+        logEtotal += getWeight(x(currentZ),0,255) * (x(zmoinslndeltat));
         totalWeight += getWeight(x(currentZ),0,255);
       }
       logE = (logEtotal/totalWeight);
-      if(logE > logEmax)  logEmax = logE;
-      if(logE < logEmin)  logEmin = logE;
 
-      imageHDR_red(i,j) = logE;
+      e = exp(logE);
+
+      if(e > emax)  emax = e;
+      if(e < emin)  emin = e;
+      
+      
+
+      //if(i==0 && j < 100) std ::cout << e << std::endl;
+
+      imageHDR_red(i,j) = e;
     }
   }
 
@@ -283,16 +297,17 @@ int main(int argc, char **argv)
   double a,b;
   int zmin=0,zmax=255;
 
-  a = (zmax-zmin)/(logEmax - logEmin);
-  b = zmin-a*logEmin;
+  a = (zmax-zmin)/(emax - emin);
+  b = zmin-a*emin;
 
 
-  ImageRGB8u result = images[0];
-  for(uint x=0; x<images[0].width(); ++x){
-    for(uint y=0; y<images[0].height(); ++y){
-      result(x,y)[0] = a*imageHDR_red(y,x)+b; // R
-      result(x,y)[1] = a*imageHDR_red(y,x)+b; // G
-      result(x,y)[2] = a*imageHDR_red(y,x)+b; // B
+  ImageRGB8u result = images[16];
+  for(uint x=0; x<images[16].width(); ++x){
+    for(uint y=0; y<images[16].height(); ++y){
+      if(x == 0 && y < 100) std::cout << imageHDR_red(y,x) << std::endl;
+      result(x,y)[0] = imageHDR_red(y,x); // R
+      result(x,y)[1] = imageHDR_red(y,x); // G
+      result(x,y)[2] = imageHDR_red(y,x); // B
     }
   }
 
