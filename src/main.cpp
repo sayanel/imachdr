@@ -20,7 +20,7 @@ using namespace kn;
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////RESPONSE RECOVERY//////////////////////////////////////////////////
 
-int getWeight(int z, int zMin, int zMax){
+int getWeight(int z, int zMin = 0 , int zMax = 255){
   if( (double)z <= (zMin + zMax)/2.0){
     return z - zMin;
   }
@@ -263,17 +263,17 @@ int main(int argc, char **argv)
   std::cout<<"  "<<std::endl;
   for(int i = 0; i < height; ++i){
     for(int j = 0; j < width; ++j){
+      logEtotal = 0.;
+      totalWeight = 0.;
       for (unsigned int current_img = 0; current_img < imagesMatrixRed.size(); ++current_img){
         int currentZ = imagesMatrixRed[current_img](i,j);
-        
-        
-        int zmoinslndeltat = currentZ - log(exposure[current_img]);
-        if(zmoinslndeltat > 255) zmoinslndeltat = 255;
+        int weightIJ = getWeight(x(currentZ),0,255);
+        double lnDeltaTj = log(exposure[current_img]);
         
         //std::cout << "currentZ - log(exposure[current_img]) = " << zmoinslndeltat << std::endl;
         
-        logEtotal += getWeight(x(currentZ),0,255) * (x(zmoinslndeltat));
-        totalWeight += getWeight(x(currentZ),0,255);
+        logEtotal += weightIJ * (x(currentZ) - lnDeltaTj);
+        totalWeight += weightIJ;
       }
 
       logE = (logEtotal/totalWeight);
@@ -281,8 +281,8 @@ int main(int argc, char **argv)
       if(logE > emax)  emax = logE;
       if(logE < emin)  emin = logE;
       
-      //if(i==0 && j < 100) std ::cout << logE << std::endl;
-      imageHDR_red(i,j) = logE ;
+      if(i==500 && j > 400 && j < 500) std ::cout << "logE: " << logE << std::endl;
+      imageHDR_red(i,j) = logE;
 
     }
   }
@@ -295,23 +295,33 @@ int main(int argc, char **argv)
   double a,b;
   int zmin=0,zmax=255;
 
-  a = (zmax-zmin)/(emax - emin);
-  b = zmin-a*emin;
+  //a = (zmax)/(emax + emin);
+  //b = ( zmax / (emax + emin) ) * emin;
 
-  ImageRGB8u result = images[16];
-  for(uint x=0; x<images[16].width(); ++x){
-    for(uint y=0; y<images[16].height(); ++y){
-      //if(x == 500 && y < 100) std::cout << a*imageHDR_red(y,x) - b;
+  float emin_ = imageHDR_red.minCoeff();
+  float emax_ = imageHDR_red.maxCoeff();
+  
+
+
+  ImageRGB8u result = images[0];
+  for(uint x=0; x<images[0].width(); ++x){
+    for(uint y=0; y<images[0].height(); ++y){
+      
       //float red = result(x,y)[0];
-      //if(x == 500 && y < 100) std::cout << " img: " << red << std::endl;
-      result(x,y)[0] = (a*imageHDR_red(y,x) - b); // R
+
+      //if(imageHDR_red(y,x) <= 0) result(x,y)[0] = (imageHDR_red(y,x) * zmin) / emin_ ; // R
+      //result(x,y)[0] = (imageHDR_red(y,x) * zmax) / emax_ ; // R
+      result(x,y)[0] = ((imageHDR_red(y,x)-emin_) * (zmax-zmin)) / (emax_ - emin_); // R
       result(x,y)[1] = result(x,y)[0];// G
       result(x,y)[2] = result(x,y)[0];// B
+
+      float v = result(x,y)[0];
+      if(x== 90 && y < 100) std::cout << v << std::endl;
     }
   }
 
   std::cout << "a= " << a << " ------ b = " << b << std::endl;
-  std::cout << "emax = " << emax << " -----  emin = " << emin << std::endl;
+  std::cout << "emax_ = " << emax_ << " -----  emin_ = " << emin_ << std::endl;
 
   std::cout<<"NICE (y) MONACO"<<std::endl;
 
