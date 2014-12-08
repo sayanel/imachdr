@@ -263,8 +263,8 @@ int main(int argc, char **argv)
   std::cout<<"  "<<std::endl;
   for(int i = 0; i < height; ++i){
     for(int j = 0; j < width; ++j){
-      logEtotal = 0.;
-      totalWeight = 0.;
+      logEtotal = 0;
+      totalWeight = 0;
       for (unsigned int current_img = 0; current_img < imagesMatrixRed.size(); ++current_img){
         int currentZ = imagesMatrixRed[current_img](i,j);
         int weightIJ = getWeight(x(currentZ),0,255);
@@ -282,7 +282,7 @@ int main(int argc, char **argv)
       if(logE < emin)  emin = logE;
       
       if(i==500 && j > 400 && j < 500) std ::cout << "logE: " << logE << std::endl;
-      imageHDR_red(i,j) = logE;
+      imageHDR_red(i,j) = exp(logE);
 
     }
   }
@@ -295,8 +295,8 @@ int main(int argc, char **argv)
   double a,b;
   int zmin=0,zmax=255;
 
-  //a = (zmax)/(emax + emin);
-  //b = ( zmax / (emax + emin) ) * emin;
+  a = (zmax)/(emax + emin);
+  b = ( zmax / (emax + emin) ) * emin;
 
   float emin_ = imageHDR_red.minCoeff();
   float emax_ = imageHDR_red.maxCoeff();
@@ -310,8 +310,8 @@ int main(int argc, char **argv)
       //float red = result(x,y)[0];
 
       //if(imageHDR_red(y,x) <= 0) result(x,y)[0] = (imageHDR_red(y,x) * zmin) / emin_ ; // R
-      //result(x,y)[0] = (imageHDR_red(y,x) * zmax) / emax_ ; // R
-      result(x,y)[0] = ((imageHDR_red(y,x)-emin_) * (zmax-zmin)) / (emax_ - emin_); // R
+      //result(x,y)[0] = a*imageHDR_red(y,x) + b; // R
+      result(x,y)[0] = ((imageHDR_red(y,x)-emin_) * (zmax-zmin)) / (emax_ - emin_) + 60;// R
       result(x,y)[1] = result(x,y)[0];// G
       result(x,y)[2] = result(x,y)[0];// B
 
