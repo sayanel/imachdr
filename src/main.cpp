@@ -190,7 +190,8 @@ void setWeights(std::vector<double> &zWeight, int zMin = 0, int zMax = 255)
    for( int i = 0; i < nSize; i++) {
         int z = zMin + i;
         if( z <= zMid ) zWeight[i] =  z - zMin;
-        if( z  > zMid ) zWeight[i] =  zMax - z;
+        if( z  > zMid ) zWeight[i] =  zMax - z; 
+        if(zWeight[i] <= 0) zWeight[i] = 1;
    }
 }
 
@@ -214,6 +215,7 @@ Eigen::MatrixXd calculIrradiance(const int width,
   double totalWeight = 0;
   double E;
   double lnE = 0;
+  int weightIJ = 1;
 
 
   std::cout<<"  "<<std::endl;
@@ -223,7 +225,12 @@ Eigen::MatrixXd calculIrradiance(const int width,
       totalWeight = 0;
       for (unsigned int current_img = 0; current_img < imagesMatrix.size(); ++current_img){
         int currentZ = imagesMatrix[current_img](i,j);
-        int weightIJ = zWeight[currentZ];
+        if(currentZ >= 0 && currentZ <= 255){
+          weightIJ = zWeight[currentZ];
+        }
+        else{
+          weightIJ = 1;
+        }
         double lnDeltaTj = log(exposure[current_img]);
         double Ei = (x(currentZ) - lnDeltaTj);
 
@@ -231,7 +238,7 @@ Eigen::MatrixXd calculIrradiance(const int width,
         totalWeight += weightIJ;
       }
 
-      assert( totalWeight > 0.0);
+      assert(totalWeight > 0.0);
       lnE = (logEtotal/totalWeight);
       if(lnE > emax)  emax = lnE;
       if(lnE < emin)  emin = lnE;
@@ -349,23 +356,25 @@ int main(int argc, char **argv)
     for(uint y=0; y<images[0].height(); ++y){
       
       //result(x,y)[0] = a*imageHDR_red(y,x) +b;
-      result(x,y)[0] = ((imageHDR_red(y,x)-emin) * (zmax-zmin)) / (emax - emin); // R
-      result(x,y)[1] = ((imageHDR_green(y,x)-emin) * (zmax-zmin)) / (emax - emin);// G
-      result(x,y)[2] = ((imageHDR_blue(y,x)-emin) * (zmax-zmin)) / (emax - emin);// B
+      result(x,y)[0] = ((imageHDR_red(y,x)-emin) * (zmax-zmin)) / (emax - emin);
+      result(x,y)[1] = ((imageHDR_green(y,x)-emin) * (zmax-zmin)) / (emax - emin);
+      result(x,y)[2] = ((imageHDR_blue(y,x)-emin) * (zmax-zmin)) / (emax - emin);
+
+      result(x,y)[0] = imageHDR_red(y,x)
 
       float v = result(x,y)[0];
       //if(x== 90 && y < 100) std::cout << v << std::endl;
     }
   }
 
-  std::cout << "a= " << a << " ------ b = " << b << std::endl;
+  //std::cout << "a= " << a << " ------ b = " << b << std::endl;
   std::cout << "emax = " << emax << " -----  emin = " << emin << std::endl;
 
   std::cout<<"END_"<<std::endl;
 
   // save the final image
   //saveJPG(result,"output/Tango-Charly_3.00.jpg");
-  saveJPG(result,"output/jeanjean_v1.00.jpg");
+  saveJPG(result,"output/escalier_v1.47.jpg");
 
   return 0;
 }
